@@ -99,7 +99,7 @@ export function THead({ className, ...props }: React.HTMLAttributes<HTMLTableSec
   );
 }
 
-export function TBody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
+export function TBody(props: React.HTMLAttributes<HTMLTableSectionElement>) {
   return <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60" {...props} />;
 }
 

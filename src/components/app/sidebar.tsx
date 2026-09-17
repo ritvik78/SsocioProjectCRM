@@ -15,6 +15,7 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/team", label: "Team", icon: UserCog },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/import", label: "Import", icon: Upload },
 ];
 
 export function Sidebar() {

@@ -2,14 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Spinner } from "@/components/ui/primitives";
-import { Button, Field, Input } from "@/components/ui/primitives";
+import { Button, Field, Input, Spinner } from "@/components/ui/primitives";
 import { CheckCircle2 } from "lucide-react";
 
 export function ResetPasswordForm() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [state, setState] = React.useState<"linking" | "ready" | "error" | "done">("linking");

@@ -42,7 +42,7 @@ export async function listFollowups(filters: FollowupFilter = {}) {
   const followups = await prisma.followup.findMany({
     where,
     include: {
-      brand: { include: { status: true }, select: { id: true, name: true, status: { select: { name: true, color: true } }, email: true, phone: true } },
+      brand: { select: { id: true, name: true, status: { select: { name: true, color: true } }, email: true, phone: true } },
       influencer: { select: { id: true, name: true, instagramUsername: true, email: true } },
       assignedTo: { select: { id: true, name: true } },
     },
