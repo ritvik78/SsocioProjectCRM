@@ -1,0 +1,507 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------------------------------------------
+// Users, Roles & Permissions
+// ------------------------------------------------------------------
+
+model User {
+  id               String   @id @default(cuid())
+  authId           String?  @unique // Supabase auth.users.id
+  name             String
+  email            String   @unique
+  phone            String?
+  designation      String?
+  role             String   @default("TEAM_MEMBER") // SUPER_ADMIN | ADMIN | MANAGER | TEAM_MEMBER
+  status           String   @default("INVITED") // ACTIVE | INVITED | DISABLED
+  avatarUrl        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  userPermissions  UserPermission[]
+  brandsOwned      Brand[]            @relation("BrandOwner")
+  influencersOwned Influencer[]       @relation("InfluencerOwner")
+  followupsAssigned Followup[]        @relation("FollowupAssignee")
+  followupsCompleted Followup[]       @relation("FollowupCompleter")
+  emailTemplates   EmailTemplate[]    @relation("TemplateCreator")
+  emailMessages    EmailMessage[]     @relation("EmailSender")
+  activities       Activity[]         @relation("ActivityActor")
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  invitationsSent  Invitation[]       @relation("Inviter")
+  campaignsCreated Campaign[]         @relation("CampaignCreator")
+  instagramOutreach InstagramOutreach[] @relation("InstagramAssignee")
+  responsesRecorded Response[]        @relation("ResponseRecorder")
+
+  @@index([role])
+  @@index([status])
+}
+
+model Permission {
+  id              String          @id @default(cuid())
+  key             String          @unique
+  name            String
+  description     String?
+  userPermissions UserPermission[]
+
+  @@index([key])
+}
+
+model UserPermission {
+  id           String @id @default(cuid())
+  userId       String
+  permissionId String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+}
+
+// ------------------------------------------------------------------
+// Brands
+// ------------------------------------------------------------------
+
+model BrandStatus {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#6b7280")
+  order     Int      @default(0)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  brands    Brand[]
+
+  @@index([order])
+}
+
+model Brand {
+  id                   String   @id @default(cuid())
+  name                 String
+  companyName          String?
+  contactName          String?
+  designation          String?
+  email                String?
+  phone                String?
+  website              String?
+  instagramHandle      String?
+  linkedin             String?
+  industry             String?
+  city                 String?
+  state                String?
+  source               String?
+  statusId             String
+  status               BrandStatus @relation(fields: [statusId], references: [id])
+  priority             String   @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  notes                String?
+  leadOwnerId          String?
+  leadOwner            User?    @relation("BrandOwner", fields: [leadOwnerId], references: [id], onDelete: SetNull)
+  lastContactedAt      DateTime?
+  nextFollowUpAt       DateTime?
+  onboardingDate       DateTime?
+  campaignStatus       String? // NONE | INVITED | PARTICIPATING | COMPLETED
+  // Onboarding / business details
+  businessCategory     String?
+  location             String?
+  gstNumber            String?
+  description          String?
+  productsServices     String?
+  collaborationType    String?
+  expectedCampaignType String?
+  budget               String?
+  // timestamps
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  responses      Response[]
+  followups      Followup[]
+  emailMessages  EmailMessage[]
+  activities     Activity[]
+  campaigns      Campaign[]
+
+  @@index([statusId])
+  @@index([leadOwnerId])
+  @@index([email])
+  @@index([createdAt])
+  @@index([nextFollowUpAt])
+  @@index([priority])
+}
+
+// ------------------------------------------------------------------
+// Influencers
+// ------------------------------------------------------------------
+
+model InfluencerStatus {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  color        String   @default("#6b7280")
+  order        Int      @default(0)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  influencers  Influencer[]
+
+  @@index([order])
+}
+
+model Influencer {
+  id                String   @id @default(cuid())
+  name              String
+  instagramUsername String?
+  instagramUrl      String?
+  email             String?
+  phone             String?
+  city              String?
+  state             String?
+  category          String? // Niche
+  followers         Int?
+  engagementRate    Float?
+  platform          String   @default("INSTAGRAM")
+  audienceLocation  String?
+  source            String?
+  statusId          String
+  status            InfluencerStatus @relation(fields: [statusId], references: [id])
+  notes             String?
+  assignedToId      String?
+  assignedTo        User?    @relation("InfluencerOwner", fields: [assignedToId], references: [id], onDelete: SetNull)
+  lastContactedAt   DateTime?
+  nextFollowUpAt    DateTime?
+  onboardingDate    DateTime?
+  // Onboarding
+  contentType       String?
+  preferredCollaboration String?
+  audienceDemographics   String?
+  portfolio         String?
+  // timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  responses            Response[]
+  followups            Followup[]
+  emailMessages        EmailMessage[]
+  instagramOutreach    InstagramOutreach[]
+  activities           Activity[]
+  campaignInfluencers  CampaignInfluencer[]
+
+  @@index([statusId])
+  @@index([assignedToId])
+  @@index([email])
+  @@index([instagramUsername])
+  @@index([createdAt])
+  @@index([nextFollowUpAt])
+}
+
+// ------------------------------------------------------------------
+// Campaigns
+// ------------------------------------------------------------------
+
+model Campaign {
+  id                    String    @id @default(cuid())
+  name                  String
+  brandId               String
+  brand                 Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  description           String?
+  objective             String?
+  startDate             DateTime?
+  endDate               DateTime?
+  budget                String?
+  cashbackIncentive     String?
+  targetInfluencers     Int?
+  requiredContent       String?
+  instagramRequirements String?
+  hashtags              String?
+  mentions              String?
+  termsConditions       String?
+  status                String    @default("DRAFT") // DRAFT | UPCOMING | ACTIVE | PAUSED | COMPLETED | CANCELLED
+  createdById           String?
+  createdBy             User?     @relation("CampaignCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  campaignInfluencers CampaignInfluencer[]
+  activities          Activity[]
+  emailMessages       EmailMessage[]
+
+  @@index([brandId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CampaignInfluencer {
+  id           String    @id @default(cuid())
+  campaignId   String
+  influencerId String
+  status       String    @default("PENDING") // PENDING | INVITED | SENT | OPENED | RESPONDED | ACCEPTED | REJECTED
+  invitedAt    DateTime?
+  respondedAt  DateTime?
+  responseText String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  campaign   Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  influencer Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, influencerId])
+  @@index([influencerId])
+  @@index([status])
+}
+
+// ------------------------------------------------------------------
+// Email drafts/templates & messages
+// ------------------------------------------------------------------
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   @default("GENERAL_BUSINESS") // BRAND_OUTREACH | INFLUENCER_OUTREACH | FOLLOW_UP | BRAND_ONBOARDING | INFLUENCER_ONBOARDING | CAMPAIGN_INVITATION | GENERAL_BUSINESS
+  subject     String
+  body        String
+  variables   Json? // array of variable names e.g. ["brand_name"]
+  status      String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdById String?
+  createdBy   User?    @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  emailMessages EmailMessage[]
+
+  @@index([category])
+  @@index([status])
+  @@index([createdById])
+}
+
+model EmailMessage {
+  id                 String    @id @default(cuid())
+  recipient          String
+  senderEmail        String
+  senderName         String?
+  subject            String
+  body               String
+  templateId         String?
+  template           EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  brandId            String?
+  brand              Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  influencerId       String?
+  influencer         Influencer? @relation(fields: [influencerId], references: [id], onDelete: SetNull)
+  campaignId         String?
+  campaign           Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  sentById           String?
+  sentBy             User?     @relation("EmailSender", fields: [sentById], references: [id], onDelete: SetNull)
+  providerMessageId  String? // provider event id
+  deliveryStatus     String    @default("PENDING") // PENDING | SENDING | SENT | DELIVERED | BOUNCED | FAILED
+  openStatus         Boolean   @default(false)
+  clickStatus        Boolean   @default(false)
+  responseStatus     String? // NONE | REPLIED | BOUNCED
+  followUpDate       DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  events EmailEvent[]
+
+  @@index([recipient])
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([sentById])
+  @@index([deliveryStatus])
+  @@index([createdAt])
+  @@index([followUpDate])
+}
+
+model EmailEvent {
+  id        String   @id @default(cuid())
+  emailId   String
+  email     EmailMessage @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  eventType String // delivered | opened | clicked | bounced | failed
+  raw       Json?
+  createdAt DateTime @default(now())
+
+  @@index([emailId])
+  @@index([eventType])
+}
+
+// ------------------------------------------------------------------
+// Instagram outreach
+// ------------------------------------------------------------------
+
+model InstagramOutreach {
+  id                 String    @id @default(cuid())
+  influencerId       String?
+  influencer         Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  instagramUsername  String
+  instagramUrl       String?
+  outreachDate       DateTime  @default(now())
+  message            String?
+  outreachType       String    @default("DM") // DM | COMMENT | DIRECT_POST | OTHER
+  assignedToId       String?
+  assignedTo         User?     @relation("InstagramAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  response           String?
+  responseDate       DateTime?
+  followUpDate       DateTime?
+  status             String    @default("MESSAGE_SENT") // NOT_CONTACTED | MESSAGE_SENT | FOLLOW_UP | REPLIED | INTERESTED | NOT_INTERESTED | NO_RESPONSE | ONBOARDED
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([influencerId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+// ------------------------------------------------------------------
+// Responses
+// ------------------------------------------------------------------
+
+model Response {
+  id            String    @id @default(cuid())
+  brandId       String?
+  brand         Brand?    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencerId  String?
+  influencer    Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  type          String    // INTERESTED | NOT_INTERESTED | NEED_MORE_INFORMATION | NEGOTIATION | CALLBACK_REQUESTED | NO_RESPONSE | OTHER
+  text          String?
+  date          DateTime  @default(now())
+  channel       String? // EMAIL | INSTAGRAM | PHONE | WHATSAPP | OTHER
+  notes         String?
+  recordedById  String?
+  recordedBy    User?     @relation("ResponseRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([type])
+  @@index([recordedById])
+  @@index([date])
+}
+
+// ------------------------------------------------------------------
+// Follow-ups
+// ------------------------------------------------------------------
+
+model Followup {
+  id              String    @id @default(cuid())
+  brandId         String?
+  brand           Brand?    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencerId    String?
+  influencer      Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  contactType     String    @default("EMAIL") // EMAIL | INSTAGRAM | PHONE | OTHER
+  dueDate         DateTime
+  status          String    @default("PENDING") // PENDING | COMPLETED | RESCHEDULED | CANCELLED
+  priority        String    @default("MEDIUM") // LOW | MEDIUM | HIGH
+  notes           String?
+  assignedToId    String?
+  assignedTo      User?     @relation("FollowupAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  completedAt     DateTime?
+  completedById   String?
+  completedBy     User?     @relation("FollowupCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([dueDate])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+// ------------------------------------------------------------------
+// Activity timeline & Notifications & Audit
+// ------------------------------------------------------------------
+
+model Activity {
+  id            String   @id @default(cuid())
+  brandId       String?
+  brand         Brand?   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  influencerId  String?
+  influencer    Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  campaignId    String?
+  campaign      Campaign? @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  type          String // LEAD_CREATED | EMAIL_SENT | INSTAGRAM_OUTREACH | FOLLOW_UP_CREATED | FOLLOW_UP_COMPLETED | RESPONSE_ADDED | STATUS_CHANGED | NOTE_ADDED | ONBOARDING_STARTED | ONBOARDING_COMPLETED | CAMPAIGN_CREATED | CAMPAIGN_INVITATION | CAMPAIGN_ACCEPTED | ...
+  description   String
+  meta          Json?
+  previousValue String?
+  newValue      String?
+  userId        String?
+  user          User?    @relation("ActivityActor", fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  @@index([brandId])
+  @@index([influencerId])
+  @@index([campaignId])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // FOLLOWUP_DUE | FOLLOWUP_OVERDUE | NEW_RESPONSE | NEW_LEAD | ONBOARDING_COMPLETED | CAMPAIGN_INVITE_RESPONSE | TEAM_INVITE | EMAIL_FOLLOWUP
+  title     String
+  message   String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([readAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action        String
+  recordType    String?
+  recordId      String?
+  previousValue Json?
+  newValue      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([recordType])
+  @@index([recordId])
+  @@index([createdAt])
+}
+
+// ------------------------------------------------------------------
+// Settings & Invitations
+// ------------------------------------------------------------------
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  email       String
+  name        String?
+  role        String
+  permissions Json? // array of permission keys granted on acceptance
+  invitedById String?
+  invitedBy   User?    @relation("Inviter", fields: [invitedById], references: [id], onDelete: SetNull)
+  status      String   @default("PENDING") // PENDING | ACCEPTED | EXPIRED | REVOKED
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+}
