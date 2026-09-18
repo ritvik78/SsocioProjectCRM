@@ -32,7 +32,6 @@ type SearchResult = {
 
 export function TopNav({ user }: { user: SessionUser }) {
   const router = useRouter();
-  const supabase = createClient();
   const { toast } = useToast();
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -72,7 +71,12 @@ export function TopNav({ user }: { user: SessionUser }) {
   }, [search]);
 
   async function handleLogout() {
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Supabase may be unconfigured (e.g. static preview builds); still sign out locally.
+    }
     toast({ title: "Signed out", variant: "success" });
     router.push("/login");
     router.refresh();

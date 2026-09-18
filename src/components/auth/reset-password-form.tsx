@@ -7,7 +7,7 @@ import { Button, Field, Input, Spinner } from "@/components/ui/primitives";
 import { CheckCircle2 } from "lucide-react";
 
 export function ResetPasswordForm() {
-  const supabase = createClient();
+  const supabaseRef = React.useRef<ReturnType<typeof createClient> | null>(null);
 
   const [state, setState] = React.useState<"linking" | "ready" | "error" | "done">("linking");
   const [password, setPassword] = React.useState("");
@@ -16,7 +16,21 @@ export function ResetPasswordForm() {
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
+    let cancelled = false;
+
     (async () => {
+      let supabase: ReturnType<typeof createClient>;
+      try {
+        supabase = createClient();
+        supabaseRef.current = supabase;
+      } catch {
+        if (!cancelled) {
+          setError("Authentication is not configured. Please contact your administrator.");
+          setState("error");
+        }
+        return;
+      }
+
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       if (code) {
@@ -45,7 +59,11 @@ export function ResetPasswordForm() {
       setError("Invalid or expired reset link. Please request a new one.");
       setState("error");
     })();
-  }, [supabase]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +74,11 @@ export function ResetPasswordForm() {
     }
     if (password.length < 8) {
       setError("Password must be at least 8 characters");
+      return;
+    }
+    const supabase = supabaseRef.current;
+    if (!supabase) {
+      setError("Authentication is not configured. Please contact your administrator.");
       return;
     }
     setLoading(true);
