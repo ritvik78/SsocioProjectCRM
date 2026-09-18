@@ -89,8 +89,8 @@ export function QuickEmail({ open, onClose }: { open: boolean; onClose: () => vo
           subject,
           body,
           templateId: templateId || null,
-          brandId: entityType === "brand" ? entity || null : null,
-          influencerId: entityType === "influencer" ? entity || null : null,
+          newBrandName: entityType === "brand" && entity.trim() ? entity.trim() : null,
+          newInfluencerName: entityType === "influencer" && entity.trim() ? entity.trim() : null,
         }),
       });
       const data = await res.json();

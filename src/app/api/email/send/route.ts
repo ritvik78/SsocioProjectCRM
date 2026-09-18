@@ -20,19 +20,38 @@ export async function POST(req: NextRequest) {
     let influencerId = parsed.data.influencerId ?? null;
     let recipient = parsed.data.recipient?.trim().toLowerCase() ?? "";
 
+    let newBrandName = parsed.data.newBrandName ?? null;
+    let newInfluencerName = parsed.data.newInfluencerName ?? null;
+
+    if (brandId) {
+      const exists = await prisma.brand.findUnique({ where: { id: brandId }, select: { id: true } });
+      if (!exists) {
+        if (!newBrandName) newBrandName = brandId;
+        brandId = null;
+      }
+    }
+
+    if (influencerId) {
+      const exists = await prisma.influencer.findUnique({ where: { id: influencerId }, select: { id: true } });
+      if (!exists) {
+        if (!newInfluencerName) newInfluencerName = influencerId;
+        influencerId = null;
+      }
+    }
+
     // Optional "Add to CRM": create a new brand/influencer lead from the email.
-    if (!brandId && parsed.data.newBrandName) {
+    if (!brandId && newBrandName) {
       const status = await getDefaultBrandStatus();
       const brand = await prisma.brand.create({
-        data: { name: parsed.data.newBrandName, email: recipient || null, statusId: status?.id ?? "", leadOwnerId: ctx.user.id },
+        data: { name: newBrandName, email: recipient || null, statusId: status?.id ?? "", leadOwnerId: ctx.user.id },
       });
       brandId = brand.id;
       await createActivity({ brandId: brand.id, type: "LEAD_CREATED", description: `Brand created from quick email: ${brand.name}`, userId: ctx.user.id });
     }
-    if (!influencerId && parsed.data.newInfluencerName) {
+    if (!influencerId && newInfluencerName) {
       const status = await getDefaultInfluencerStatus();
       const influencer = await prisma.influencer.create({
-        data: { name: parsed.data.newInfluencerName, email: recipient || null, statusId: status?.id ?? "", assignedToId: ctx.user.id },
+        data: { name: newInfluencerName, email: recipient || null, statusId: status?.id ?? "", assignedToId: ctx.user.id },
       });
       influencerId = influencer.id;
       await createActivity({ influencerId: influencer.id, type: "LEAD_CREATED", description: `Influencer created from quick email: ${influencer.name}`, userId: ctx.user.id });

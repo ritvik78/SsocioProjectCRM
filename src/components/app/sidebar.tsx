@@ -63,7 +63,7 @@ export function Sidebar() {
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
               )}
             >
-              <Icon className="h-4.5 w-4.5 h-[18px] w-[18px]" />
+              <Icon className="h-[18px] w-[18px]" />
               {item.label}
             </Link>
           );
