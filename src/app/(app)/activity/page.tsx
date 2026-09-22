@@ -1,7 +1,11 @@
-import { requireUser } from "@/lib/auth";
-import { ActivityView } from "@/components/activity/activity-view";
+import { Suspense } from "react";
+import { ActivityServer } from "@/components/activity/activity-server";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
-export default async function ActivityPage() {
-  await requireUser();
-  return <ActivityView />;
+export default function ActivityPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <ActivityServer />
+    </Suspense>
+  );
 }

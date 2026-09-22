@@ -17,10 +17,19 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
 import { Avatar } from "@/components/ui/data";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import type { SessionUser } from "@/lib/auth";
-import { NotificationCenter } from "./notification-center";
-import { QuickEmail } from "./quick-email";
 import { Sidebar } from "./sidebar";
+
+const NotificationCenter = dynamic(
+  () => import("./notification-center").then((mod) => mod.NotificationCenter),
+  { loading: () => <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" /> }
+);
+
+const QuickEmail = dynamic(
+  () => import("./quick-email").then((mod) => mod.QuickEmail),
+  { loading: () => null }
+);
 
 type SearchResult = {
   id: string;

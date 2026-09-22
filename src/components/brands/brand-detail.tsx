@@ -9,10 +9,23 @@ import { Button, Select, Card, CardHeader, CardTitle, CardContent, Spinner, Empt
 import { StatusBadge, PriorityBadge, Tabs, Avatar, ConfirmDialog } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { BrandForm, type BrandStatus, type TeamMember, type BrandFormValues } from "@/components/brands/brand-form";
-import { QuickSendEmail } from "@/components/outreach/quick-send";
-import { FollowupForm } from "@/components/followups/followup-form";
+import dynamic from "next/dynamic";
+import type { BrandStatus, TeamMember, BrandFormValues } from "@/components/brands/brand-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { formatDate, formatDateTime, timeAgo } from "@/lib/utils";
+
+const BrandForm = dynamic(
+  () => import("@/components/brands/brand-form").then((m) => m.BrandForm),
+  { loading: () => <FormSkeleton /> }
+);
+const QuickSendEmail = dynamic(
+  () => import("@/components/outreach/quick-send").then((m) => m.QuickSendEmail),
+  { loading: () => <FormSkeleton /> }
+);
+const FollowupForm = dynamic(
+  () => import("@/components/followups/followup-form").then((m) => m.FollowupForm),
+  { loading: () => <FormSkeleton /> }
+);
 import { ACTIVITY_TYPES } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 

@@ -8,10 +8,17 @@ import { Button, Input, Select, Card, Spinner, EmptyState } from "@/components/u
 import { Table, THead, TBody, TH, TD, Pagination, EmptyRow, ConfirmDialog, StatusBadge, Avatar } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { CampaignForm, type CampaignFormValues } from "@/components/campaigns/campaign-form";
+import dynamic from "next/dynamic";
+import type { CampaignFormValues } from "@/components/campaigns/campaign-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { cn, formatDate } from "@/lib/utils";
 import { CAMPAIGN_STATUS_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
+
+const CampaignForm = dynamic(
+  () => import("@/components/campaigns/campaign-form").then((m) => m.CampaignForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 type CampaignRow = {
   id: string;

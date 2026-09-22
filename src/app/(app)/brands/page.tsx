@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { BrandsView } from "@/components/brands/brands-view";
+import { Suspense } from "react";
+import { BrandsServer } from "@/components/brands/brands-server";
+import { CardGridSkeleton } from "@/components/ui/skeletons";
 
-export default async function BrandsPage() {
-  const ctx = await requirePermission("brands.view");
-  return <BrandsView user={ctx.user} />;
+export default function BrandsPage() {
+  return (
+    <Suspense fallback={<CardGridSkeleton />}>
+      <BrandsServer />
+    </Suspense>
+  );
 }

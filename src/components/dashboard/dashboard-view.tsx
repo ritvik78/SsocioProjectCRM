@@ -15,12 +15,23 @@ import {
   ArrowRight,
   Activity as ActivityIcon,
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell } from "recharts";
-
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, EmptyState, Spinner } from "@/components/ui/primitives";
 import { StatusBadge, Avatar } from "@/components/ui/data";
 import { cn, formatNumber, timeAgo } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth";
+import { ChartSkeleton } from "@/components/ui/skeletons";
+
+const EmailSeriesChart = dynamic(
+  () => import("./dashboard-charts").then((mod) => mod.EmailSeriesChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+
+const LeadStatusChart = dynamic(
+  () => import("./dashboard-charts").then((mod) => mod.LeadStatusChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+
 
 type AnalyticsData = {
   summary: {
@@ -231,19 +242,7 @@ export function DashboardView({ user, canAnalytics }: { user: SessionUser; canAn
                 Full analytics →
               </Link>
             </div>
-            <div className="mt-3 h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={emailSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.15)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Sent" stroke="#6366f1" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="Opened" stroke="#10b981" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <EmailSeriesChart data={emailSeries} />
           </Card>
         ) : (
           <Card className="flex items-center justify-center p-5 lg:col-span-2">
@@ -269,22 +268,7 @@ export function DashboardView({ user, canAnalytics }: { user: SessionUser; canAn
                 if (all.length === 0) {
                   return <p className="py-6 text-center text-sm text-zinc-400">No records yet.</p>;
                 }
-                return (
-                  <div className="mt-2 h-44">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={all} dataKey="count" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={2}>
-                          {all.map((x, i) => (
-                            <Cell key={i} fill={x.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: any, _name: any, item: any) => [`${value} ${item?.payload?.label}`, item?.payload?.name]}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                );
+                return <LeadStatusChart data={all} />;
               })()}
             </CardContent>
           </Card>

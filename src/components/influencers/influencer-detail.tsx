@@ -9,11 +9,27 @@ import { Button, Select, Card, CardHeader, CardTitle, CardContent, Spinner, Empt
 import { StatusBadge, PriorityBadge, Tabs, Avatar, ConfirmDialog } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { InfluencerForm, type InfluencerStatus, type InfluencerFormValues } from "@/components/influencers/influencer-form";
-import { InstagramOutreachForm } from "@/components/influencers/instagram-outreach-form";
-import { QuickSendEmail } from "@/components/outreach/quick-send";
-import { FollowupForm } from "@/components/followups/followup-form";
+import dynamic from "next/dynamic";
+import type { InfluencerStatus, InfluencerFormValues } from "@/components/influencers/influencer-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { formatDate, formatDateTime, timeAgo, formatNumber } from "@/lib/utils";
+
+const InfluencerForm = dynamic(
+  () => import("@/components/influencers/influencer-form").then((m) => m.InfluencerForm),
+  { loading: () => <FormSkeleton /> }
+);
+const InstagramOutreachForm = dynamic(
+  () => import("@/components/influencers/instagram-outreach-form").then((m) => m.InstagramOutreachForm),
+  { loading: () => <FormSkeleton /> }
+);
+const QuickSendEmail = dynamic(
+  () => import("@/components/outreach/quick-send").then((m) => m.QuickSendEmail),
+  { loading: () => <FormSkeleton /> }
+);
+const FollowupForm = dynamic(
+  () => import("@/components/followups/followup-form").then((m) => m.FollowupForm),
+  { loading: () => <FormSkeleton /> }
+);
 import { ACTIVITY_TYPES, IG_STATUS_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 

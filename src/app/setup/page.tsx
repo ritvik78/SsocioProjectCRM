@@ -1,7 +1,13 @@
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
-import { SetupForm } from "@/components/auth/setup-form";
 import { Sparkles } from "lucide-react";
+import { FormSkeleton } from "@/components/ui/skeletons";
+
+const SetupForm = dynamic(
+  () => import("@/components/auth/setup-form").then((m) => m.SetupForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 export default async function SetupPage() {
   const userCount = await prisma.user.count();

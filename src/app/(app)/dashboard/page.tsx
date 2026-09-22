@@ -1,8 +1,11 @@
-import { requireUser, hasPermission } from "@/lib/auth";
-import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { Suspense } from "react";
+import { DashboardServer } from "@/components/dashboard/dashboard-server";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 
-export default async function DashboardPage() {
-  const ctx = await requireUser();
-  const canAnalytics = hasPermission(ctx.user, "analytics.view");
-  return <DashboardView user={ctx.user} canAnalytics={canAnalytics} />;
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardServer />
+    </Suspense>
+  );
 }

@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { OutreachView } from "@/components/outreach/outreach-view";
+import { Suspense } from "react";
+import { OutreachServer } from "@/components/outreach/outreach-server";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
-export default async function OutreachPage() {
-  const ctx = await requirePermission("outreach.manage");
-  return <OutreachView user={ctx.user} />;
+export default function OutreachPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <OutreachServer />
+    </Suspense>
+  );
 }

@@ -1,10 +1,11 @@
-import { Suspense } from "react";
-import { ActivateForm } from "@/components/auth/activate-form";
+import dynamic from "next/dynamic";
+import { FormSkeleton } from "@/components/ui/skeletons";
+
+const ActivateForm = dynamic(
+  () => import("@/components/auth/activate-form").then((m) => m.ActivateForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 export default function ActivatePage() {
-  return (
-    <Suspense>
-      <ActivateForm />
-    </Suspense>
-  );
+  return <ActivateForm />;
 }

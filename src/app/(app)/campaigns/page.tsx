@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { CampaignsView } from "@/components/campaigns/campaigns-view";
+import { Suspense } from "react";
+import { CampaignsServer } from "@/components/campaigns/campaigns-server";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
-export default async function CampaignsPage() {
-  const ctx = await requirePermission("campaigns.manage");
-  return <CampaignsView user={ctx.user} />;
+export default function CampaignsPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <CampaignsServer />
+    </Suspense>
+  );
 }

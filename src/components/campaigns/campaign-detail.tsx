@@ -9,10 +9,17 @@ import { Button, Select, Card, CardContent, Spinner, EmptyState } from "@/compon
 import { StatusBadge, Avatar, Tabs, ConfirmDialog } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { CampaignForm, type CampaignFormValues } from "@/components/campaigns/campaign-form";
+import dynamic from "next/dynamic";
+import type { CampaignFormValues } from "@/components/campaigns/campaign-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { CAMPAIGN_STATUS_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
+
+const CampaignForm = dynamic(
+  () => import("@/components/campaigns/campaign-form").then((m) => m.CampaignForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 type CampaignDetail = {
   id: string;

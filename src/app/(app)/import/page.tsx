@@ -1,7 +1,5 @@
-import { requirePermission } from "@/lib/auth";
-import { ImportView } from "@/components/import/import-view";
+import { ImportServer } from "@/components/import/import-server";
 
 export default async function ImportPage() {
-  await requirePermission("brands.add");
-  return <ImportView />;
+  return <ImportServer />;
 }

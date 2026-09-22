@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { SettingsView } from "@/components/settings/settings-view";
+import { Suspense } from "react";
+import { SettingsServer } from "@/components/settings/settings-server";
+import { FormSkeleton } from "@/components/ui/skeletons";
 
-export default async function SettingsPage() {
-  const ctx = await requirePermission("permissions.manage");
-  return <SettingsView user={ctx.user} />;
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<FormSkeleton />}>
+      <SettingsServer />
+    </Suspense>
+  );
 }

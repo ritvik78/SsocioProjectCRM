@@ -8,9 +8,16 @@ import { Button, Input, Select, Card, Spinner, EmptyState } from "@/components/u
 import { Table, THead, TBody, TH, TD, Pagination, EmptyRow, ConfirmDialog, StatusBadge, Avatar } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { InfluencerForm, type InfluencerStatus, type InfluencerFormValues } from "@/components/influencers/influencer-form";
+import dynamic from "next/dynamic";
+import type { InfluencerStatus, InfluencerFormValues } from "@/components/influencers/influencer-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { cn, formatNumber, formatDate } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth";
+
+const InfluencerForm = dynamic(
+  () => import("@/components/influencers/influencer-form").then((m) => m.InfluencerForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 type InfluencerRow = {
   id: string;

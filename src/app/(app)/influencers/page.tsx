@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { InfluencersView } from "@/components/influencers/influencers-view";
+import { Suspense } from "react";
+import { InfluencersServer } from "@/components/influencers/influencers-server";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
-export default async function InfluencersPage() {
-  const ctx = await requirePermission("influencers.view");
-  return <InfluencersView user={ctx.user} />;
+export default function InfluencersPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <InfluencersServer />
+    </Suspense>
+  );
 }

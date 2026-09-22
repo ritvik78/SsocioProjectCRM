@@ -9,9 +9,16 @@ import { Button, Input, Select, Card, Spinner, EmptyState } from "@/components/u
 import { Table, THead, TBody, TH, TD, Pagination, EmptyRow, ConfirmDialog, StatusBadge, PriorityBadge, Avatar } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { BrandForm, type BrandStatus, type TeamMember, type BrandFormValues } from "@/components/brands/brand-form";
+import dynamic from "next/dynamic";
+import type { BrandStatus, TeamMember, BrandFormValues } from "@/components/brands/brand-form";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { cn, formatDate } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth";
+
+const BrandForm = dynamic(
+  () => import("@/components/brands/brand-form").then((m) => m.BrandForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 type BrandStatusRow = { id: string; name: string; color: string | null };
 

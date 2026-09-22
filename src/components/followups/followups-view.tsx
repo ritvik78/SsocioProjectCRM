@@ -8,9 +8,15 @@ import { Button, Input, Select, Card, Spinner, EmptyState, Textarea, Field } fro
 import { StatusBadge, PriorityBadge, Avatar, Tabs, ConfirmDialog } from "@/components/ui/data";
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { FollowupForm } from "@/components/followups/followup-form";
+import dynamic from "next/dynamic";
+import { FormSkeleton } from "@/components/ui/skeletons";
 import { formatDate, timeAgo } from "@/lib/utils";
 import type { SessionUser } from "@/lib/auth";
+
+const FollowupForm = dynamic(
+  () => import("@/components/followups/followup-form").then((m) => m.FollowupForm),
+  { loading: () => <FormSkeleton /> }
+);
 
 type Followup = {
   id: string;

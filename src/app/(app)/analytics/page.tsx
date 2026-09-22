@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { AnalyticsView } from "@/components/analytics/analytics-view";
+import { Suspense } from "react";
+import { AnalyticsServer } from "@/components/analytics/analytics-server";
+import { DashboardSkeleton } from "@/components/ui/skeletons";
 
-export default async function AnalyticsPage() {
-  await requirePermission("analytics.view");
-  return <AnalyticsView />;
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <AnalyticsServer />
+    </Suspense>
+  );
 }

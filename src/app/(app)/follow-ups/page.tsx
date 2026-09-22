@@ -1,7 +1,11 @@
-import { requirePermission } from "@/lib/auth";
-import { FollowupsView } from "@/components/followups/followups-view";
+import { Suspense } from "react";
+import { FollowupsServer } from "@/components/followups/followups-server";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
-export default async function FollowupsPage() {
-  const ctx = await requirePermission("followups.manage");
-  return <FollowupsView user={ctx.user} />;
+export default function FollowupsPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <FollowupsServer />
+    </Suspense>
+  );
 }
