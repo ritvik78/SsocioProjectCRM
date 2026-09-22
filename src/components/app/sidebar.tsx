@@ -38,17 +38,17 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-zinc-200 bg-white lg:flex dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex h-16 items-center gap-2.5 border-b border-zinc-200 px-5 dark:border-zinc-800">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500">
-          <Sparkles className="h-5 w-5 text-white" />
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-zinc-200 bg-white lg:flex">
+      <div className="flex h-16 items-center gap-2.5 border-b border-zinc-200 px-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-amber-300 to-yellow-500 shadow-md">
+          <Sparkles className="h-5 w-5 text-black" />
         </div>
         <div>
-          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Ssocio Pro</p>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-zinc-400">CRM Portal</p>
+          <p className="text-sm font-extrabold text-zinc-950 tracking-tight">Ssocio Pro</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">CRM Portal</p>
         </div>
       </div>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
@@ -57,20 +57,20 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                 active
-                  ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
-                  : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+                  ? "bg-amber-400/20 text-amber-950 font-bold border-l-4 border-amber-500 shadow-xs"
+                  : "text-zinc-800 font-medium hover:bg-amber-50 hover:text-amber-950"
               )}
             >
-              <Icon className="h-[18px] w-[18px]" />
+              <Icon className={cn("h-[18px] w-[18px]", active ? "text-amber-700" : "text-zinc-600")} />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
-        <p className="text-[11px] leading-relaxed text-zinc-400">
+      <div className="border-t border-zinc-200 p-4 bg-amber-50/50">
+        <p className="text-[11px] font-semibold leading-relaxed text-zinc-800">
           Brand onboarding • Influencer outreach • Campaigns
         </p>
       </div>

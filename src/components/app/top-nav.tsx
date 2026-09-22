@@ -102,10 +102,10 @@ export function TopNav({ user }: { user: SessionUser }) {
         </button>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-500">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-500 shadow-sm">
+            <Sparkles className="h-4 w-4 text-black" />
           </div>
-          <span className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Ssocio CRM</span>
+          <span className="text-sm font-extrabold text-zinc-950">Ssocio CRM</span>
         </div>
 
         {/* Global search */}
@@ -115,7 +115,7 @@ export function TopNav({ user }: { user: SessionUser }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search brands, influencers, emails, phones…"
-            className="h-9.5 h-10 w-full rounded-lg border border-zinc-200 bg-zinc-50 pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+            className="h-9.5 w-full rounded-lg border border-zinc-300 bg-zinc-50/80 pl-9 pr-3 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-amber-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/40"
           />
           {results.length > 0 && (
             <div className="absolute top-full mt-1 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
@@ -143,9 +143,9 @@ export function TopNav({ user }: { user: SessionUser }) {
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => setQuickEmailOpen(true)}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-sm font-medium text-white hover:bg-indigo-500"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-amber-400 px-3 text-sm font-bold text-zinc-950 hover:bg-amber-500 border border-amber-400/90 shadow-sm"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-4 w-4 text-zinc-950" />
             <span className="hidden sm:inline">Quick Email</span>
           </button>
 
@@ -240,10 +240,10 @@ function MobileNavLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       className={cn(
-        "block rounded-lg px-3 py-2 text-sm font-medium",
+        "block rounded-lg px-3 py-2 text-sm font-medium transition-all",
         active
-          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+          ? "bg-amber-400/20 text-amber-950 font-bold border-l-4 border-amber-500"
+          : "text-zinc-800 hover:bg-amber-50 hover:text-amber-950"
       )}
     >
       {label}

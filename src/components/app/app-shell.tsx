@@ -6,7 +6,7 @@ import type { SessionUser } from "@/lib/auth";
 
 export function AppShell({ user, children }: { user: SessionUser; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-white text-zinc-950">
       <Sidebar />
       <div className="lg:pl-60">
         <TopNav user={user} />

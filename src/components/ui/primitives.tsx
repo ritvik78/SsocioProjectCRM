@@ -9,15 +9,15 @@ type ButtonSize = "xs" | "sm" | "md" | "lg" | "icon";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-indigo-600 text-white hover:bg-indigo-500 focus-visible:ring-indigo-500 disabled:hover:bg-indigo-600",
+    "bg-amber-400 text-zinc-950 hover:bg-amber-500 active:bg-amber-600 focus-visible:ring-amber-400 font-semibold shadow-sm border border-amber-400/90 disabled:hover:bg-amber-400",
   secondary:
-    "bg-zinc-100 text-zinc-900 hover:bg-zinc-200 focus-visible:ring-zinc-500 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700",
+    "bg-amber-50 text-zinc-950 hover:bg-amber-100/80 focus-visible:ring-amber-400 border border-amber-200/80 font-medium",
   outline:
-    "border border-zinc-300 bg-transparent text-zinc-700 hover:bg-zinc-50 focus-visible:ring-zinc-400 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800/60",
+    "border border-zinc-300 bg-white text-zinc-950 hover:bg-amber-50/80 hover:border-amber-400 focus-visible:ring-amber-400 font-medium",
   ghost:
-    "bg-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
-  danger: "bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-500 disabled:hover:bg-red-600",
-  success: "bg-emerald-600 text-white hover:bg-emerald-500 focus-visible:ring-emerald-500 disabled:hover:bg-emerald-600",
+    "bg-transparent text-zinc-800 hover:bg-amber-100/70 hover:text-zinc-950 font-medium",
+  danger: "bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-500 disabled:hover:bg-red-600 font-semibold",
+  success: "bg-emerald-600 text-white hover:bg-emerald-500 focus-visible:ring-emerald-500 disabled:hover:bg-emerald-600 font-semibold",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
@@ -41,14 +41,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:focus-visible:ring-offset-zinc-950",
+          "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-offset-white",
           buttonVariants[variant],
           buttonSizes[size],
           className
         )}
         {...props}
       >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-zinc-950" />}
         {children}
       </button>
     );
@@ -65,7 +65,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900",
+        "rounded-xl border border-zinc-200/90 bg-white shadow-sm text-zinc-950",
         className
       )}
       {...props}
@@ -84,14 +84,14 @@ export function CardTitle({
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-base font-semibold text-zinc-900 dark:text-zinc-100", className)} {...props} />;
+  return <h3 className={cn("text-base font-bold text-zinc-950", className)} {...props} />;
 }
 
 export function CardDescription({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("mt-1 text-sm text-zinc-500 dark:text-zinc-400", className)} {...props} />;
+  return <p className={cn("mt-1 text-sm text-zinc-600", className)} {...props} />;
 }
 
 export function CardContent({
@@ -108,7 +108,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "h-9.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+        "h-9.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -122,7 +122,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
     <textarea
       ref={ref}
       className={cn(
-        "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+        "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -136,7 +136,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     <select
       ref={ref}
       className={cn(
-        "h-9.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100",
+        "h-9.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -150,7 +150,7 @@ Select.displayName = "Select";
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
-      className={cn("mb-1.5 block text-xs font-medium text-zinc-600 dark:text-zinc-300", className)}
+      className={cn("mb-1.5 block text-xs font-semibold text-zinc-900", className)}
       {...props}
     />
   );
@@ -173,10 +173,10 @@ export function Field({
     <div className={cn("space-y-1", className)}>
       <Label>
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-amber-600 font-bold">*</span>}
       </Label>
       {children}
-      {hint && <p className="text-xs text-zinc-400">{hint}</p>}
+      {hint && <p className="text-xs text-zinc-500">{hint}</p>}
     </div>
   );
 }
@@ -197,23 +197,23 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-14 text-center", className)}>
-      {icon && <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 dark:bg-zinc-800">{icon}</div>}
-      <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
-      {description && <p className="mt-1 max-w-sm text-sm text-zinc-500">{description}</p>}
+    <div className={cn("flex flex-col items-center justify-center py-14 text-center bg-white", className)}>
+      {icon && <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-900">{icon}</div>}
+      <h3 className="text-sm font-bold text-zinc-950">{title}</h3>
+      {description && <p className="mt-1 max-w-sm text-sm text-zinc-600">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cn("h-5 w-5 animate-spin text-indigo-500", className)} />;
+  return <Loader2 className={cn("h-5 w-5 animate-spin text-amber-500", className)} />;
 }
 
 export function FullPageLoader() {
   return (
-    <div className="flex h-[60vh] items-center justify-center">
-      <Spinner className="h-8 w-8" />
+    <div className="flex h-[60vh] items-center justify-center bg-white">
+      <Spinner className="h-8 w-8 text-amber-500" />
     </div>
   );
 }

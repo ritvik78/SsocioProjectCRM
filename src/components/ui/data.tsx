@@ -64,11 +64,11 @@ export function Avatar({
     md: "h-8 w-8 text-xs",
     lg: "h-10 w-10 text-sm",
   };
-  const bg = color ?? "bg-indigo-500";
+  const bg = color ?? "bg-amber-400 text-zinc-950 font-bold";
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white",
+        "inline-flex shrink-0 items-center justify-center rounded-full font-bold shadow-xs",
         sizes[size],
         bg,
         className
@@ -93,7 +93,7 @@ export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableEle
 export function THead({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn("border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400", className)}
+      className={cn("border-b border-zinc-200 bg-amber-50/50 text-xs font-bold uppercase tracking-wide text-zinc-900", className)}
       {...props}
     />
   );
@@ -193,8 +193,8 @@ export function Tabs<T extends string>({
           className={cn(
             "-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
             value === tab.value
-              ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+              ? "border-amber-500 text-amber-950 font-bold bg-amber-50/60 rounded-t-lg"
+              : "border-transparent text-zinc-700 hover:text-zinc-950 hover:bg-zinc-50"
           )}
         >
           {tab.label}
