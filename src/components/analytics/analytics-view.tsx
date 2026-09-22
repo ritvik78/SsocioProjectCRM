@@ -47,13 +47,6 @@ type AnalyticsData = {
   recentCampaigns: { id: string; name: string; status: string; brand: { name: string } | null; _count: { campaignInfluencers: number } }[];
 };
 
-const AXIS_TICK = { fontSize: 11, fill: "#71717a" };
-const TOOLTIP_STYLE = {
-  borderRadius: 8,
-  border: "1px solid #e4e4e7",
-  fontSize: 12,
-  background: "#fff",
-} as const;
 const EMAIL_COLORS = { sent: "#3b82f6", opened: "#10b981", clicked: "#f59e0b" };
 
 function KpiCard({ label, value, sub, icon, accent }: { label: string; value: string | number; sub?: string; icon: React.ReactNode; accent: string }) {

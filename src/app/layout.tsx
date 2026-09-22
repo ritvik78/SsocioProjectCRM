@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ssocio Pro CRM",
   description: "Brand onboarding, influencer outreach and campaign management for Ssocio Pro.",
+  icons: { icon: "/ssocioprologo.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

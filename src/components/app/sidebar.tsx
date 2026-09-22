@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -14,7 +15,6 @@ import {
   UserCog,
   BarChart3,
   Settings,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,8 +40,8 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-zinc-200 bg-white lg:flex">
       <div className="flex h-16 items-center gap-2.5 border-b border-zinc-200 px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-amber-300 to-yellow-500 shadow-md">
-          <Sparkles className="h-5 w-5 text-black" />
+        <div className="relative h-9 w-9 shrink-0">
+          <Image src="/ssocioprologo.png" alt="Ssocio Pro logo" fill className="rounded-xl object-contain" />
         </div>
         <div>
           <p className="text-sm font-extrabold text-zinc-950 tracking-tight">Ssocio Pro</p>

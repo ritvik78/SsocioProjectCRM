@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
@@ -11,7 +12,6 @@ import {
   ChevronDown,
   LogOut,
   User as UserIcon,
-  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
@@ -102,8 +102,8 @@ export function TopNav({ user }: { user: SessionUser }) {
         </button>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-yellow-500 shadow-sm">
-            <Sparkles className="h-4 w-4 text-black" />
+          <div className="relative h-8 w-8 shrink-0">
+            <Image src="/ssocioprologo.png" alt="Ssocio Pro logo" fill className="rounded-lg object-contain" />
           </div>
           <span className="text-sm font-extrabold text-zinc-950">Ssocio CRM</span>
         </div>

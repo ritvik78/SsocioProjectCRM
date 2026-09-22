@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import prisma from "@/lib/db";
-import { Sparkles } from "lucide-react";
 import { FormSkeleton } from "@/components/ui/skeletons";
 
 const SetupForm = dynamic(
@@ -16,8 +16,8 @@ export default async function SetupPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-10 dark:bg-zinc-950">
       <div className="mb-6 flex items-center gap-2.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500">
-          <Sparkles className="h-5 w-5 text-white" />
+        <div className="relative h-10 w-10 shrink-0">
+          <Image src="/ssocioprologo.png" alt="Ssocio Pro logo" fill className="rounded-xl object-contain" />
         </div>
         <div>
           <p className="text-base font-bold text-zinc-900 dark:text-zinc-50">Ssocio Pro</p>
