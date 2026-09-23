@@ -69,8 +69,7 @@ export async function createTask(input: TaskInput, actor: { id: string }) {
   if (!input.dueDate || isNaN(new Date(input.dueDate).getTime())) {
     throw new ApiError(422, "A valid task date is required");
   }
-  const dueDate = new Date(input.dueDate);
-  dueDate.setHours(12, 0, 0, 0);
+  const dueDate = new Date(`${input.dueDate}T12:00:00.000Z`);
 
   const task = await prisma.task.create({
     data: {
@@ -120,9 +119,8 @@ export async function updateTask(id: string, input: Partial<TaskInput>, actor: {
 
   let dueDate: Date | undefined;
   if (input.dueDate) {
-    dueDate = new Date(input.dueDate);
-    if (isNaN(dueDate.getTime())) throw new ApiError(422, "A valid task date is required");
-    dueDate.setHours(12, 0, 0, 0);
+    if (isNaN(new Date(input.dueDate).getTime())) throw new ApiError(422, "A valid task date is required");
+    dueDate = new Date(`${input.dueDate}T12:00:00.000Z`);
   }
 
   const updated = await prisma.task.update({

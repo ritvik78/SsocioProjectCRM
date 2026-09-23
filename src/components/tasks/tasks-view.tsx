@@ -44,7 +44,7 @@ export function TasksView() {
   const { toast } = useToast();
 
   const [rows, setRows] = React.useState<TaskRow[]>([]);
-  const [bucket, setBucket] = React.useState<Bucket>("today");
+  const [bucket, setBucket] = React.useState<Bucket>("all");
   const [search, setSearch] = React.useState("");
   const [priorityFilter, setPriorityFilter] = React.useState("");
   const [loading, setLoading] = React.useState(true);
@@ -99,7 +99,7 @@ export function TasksView() {
   };
 
   const resetFilters = () => {
-    const nb = "today";
+    const nb = "all";
     setBucket(nb);
     setSearch("");
     setPriorityFilter("");
