@@ -11,12 +11,12 @@ import {
   Send,
   ChevronDown,
   LogOut,
+  CalendarDays,
   User as UserIcon,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/toast";
+import { signOutAction } from "@/lib/actions";
 import { Avatar } from "@/components/ui/data";
-import { cn } from "@/lib/utils";
+import { cn, isNextRedirectError } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import type { SessionUser } from "@/lib/auth";
 import { Sidebar } from "./sidebar";
@@ -41,7 +41,6 @@ type SearchResult = {
 
 export function TopNav({ user }: { user: SessionUser }) {
   const router = useRouter();
-  const { toast } = useToast();
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -79,16 +78,17 @@ export function TopNav({ user }: { user: SessionUser }) {
     return () => clearTimeout(t);
   }, [search]);
 
-  async function handleLogout() {
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-    } catch {
-      // Supabase may be unconfigured (e.g. static preview builds); still sign out locally.
-    }
-    toast({ title: "Signed out", variant: "success" });
-    router.push("/login");
-    router.refresh();
+  function handleLogout() {
+    React.startTransition(async () => {
+      try {
+        await signOutAction();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        console.error("Sign out failed:", e?.message);
+        router.push("/login");
+        router.refresh();
+      }
+    });
   }
 
   return (
@@ -139,6 +139,14 @@ export function TopNav({ user }: { user: SessionUser }) {
             </div>
           )}
         </div>
+
+        <Link
+          href="/calendar"
+          title="Calendar"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 text-sm font-semibold text-zinc-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-950 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+        >
+          <CalendarDays className="h-4 w-4 text-amber-600" />
+        </Link>
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -215,6 +223,7 @@ function MobileNav() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/brands", label: "Brands" },
     { href: "/influencers", label: "Influencers" },
+    { href: "/calendar", label: "Calendar" },
     { href: "/outreach", label: "Outreach" },
     { href: "/follow-ups", label: "Follow-ups" },
     { href: "/campaigns", label: "Campaigns" },

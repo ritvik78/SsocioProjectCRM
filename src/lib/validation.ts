@@ -193,6 +193,13 @@ export const emailSettingsSchema = z.object({
   replyTo: z.string().email("Enter a valid reply-to email").optional().nullable(),
 });
 
+export const taskSchema = z.object({
+  title: z.string().trim().min(1, "Task title is required"),
+  dueDate: z.string().min(1, "Task date is required").transform((v) => new Date(v)),
+  priority: z.string().default("MEDIUM"),
+  notes: optionalString,
+});
+
 export type BrandInput = z.infer<typeof brandSchema>;
 export type InfluencerInput = z.infer<typeof influencerSchema>;
 export type CampaignInput = z.infer<typeof campaignSchema>;
@@ -202,3 +209,4 @@ export type FollowupInput = z.infer<typeof followupSchema>;
 export type ResponseInput = z.infer<typeof responseSchema>;
 export type InstagramOutreachInput = z.infer<typeof instagramOutreachSchema>;
 export type TeamInviteInput = z.infer<typeof teamInviteSchema>;
+export type TaskInput = z.infer<typeof taskSchema>;

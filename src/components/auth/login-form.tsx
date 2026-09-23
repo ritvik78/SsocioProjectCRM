@@ -2,40 +2,37 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button, Field, Input } from "@/components/ui/primitives";
+import { toFormData, isNextRedirectError } from "@/lib/utils";
+import { signInAction } from "@/lib/actions";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Sign-in failed");
-        return;
+    React.startTransition(async () => {
+      try {
+        await signInAction(
+          toFormData({
+            email,
+            password,
+            next: searchParams.get("next") || "/dashboard",
+          })
+        );
+      } catch (err: any) {
+        if (isNextRedirectError(err)) return;
+        setError(err?.message || "Sign-in failed");
+        setLoading(false);
       }
-      const next = searchParams.get("next") || "/dashboard";
-      router.push(next);
-      router.refresh();
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    });
   }
 
   return (

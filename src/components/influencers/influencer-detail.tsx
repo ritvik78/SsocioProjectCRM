@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Users, AtSign, Mail, Phone, Pencil, Send, CalendarClock, Camera as IgIcon, Megaphone, CalendarCheck } from "lucide-react";
 
 import { Button, Select, Card, CardHeader, CardTitle, CardContent, Spinner, EmptyState } from "@/components/ui/primitives";
@@ -12,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { InfluencerStatus, InfluencerFormValues } from "@/components/influencers/influencer-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { formatDate, formatDateTime, timeAgo, formatNumber } from "@/lib/utils";
+import { formatDate, formatDateTime, timeAgo, formatNumber, toFormData, isNextRedirectError } from "@/lib/utils";
+import { updateInfluencer, deleteInfluencer } from "@/lib/actions";
 
 const InfluencerForm = dynamic(
   () => import("@/components/influencers/influencer-form").then((m) => m.InfluencerForm),
@@ -90,7 +90,6 @@ type Tab = "timeline" | "followups" | "emails" | "instagram" | "campaigns" | "no
 
 export function InfluencerDetail({ id, user }: { id: string; user: SessionUser }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [inf, setInf] = React.useState<InfluencerDetail | null>(null);
   const [statuses, setStatuses] = React.useState<InfluencerStatus[]>([]);
   const [members, setMembers] = React.useState<{ id: string; name: string; email: string }[]>([]);
@@ -145,54 +144,48 @@ export function InfluencerDetail({ id, user }: { id: string; user: SessionUser }
   const changeStatus = async (statusId: string) => {
     if (!inf || statusId === inf.statusId) return;
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/influencers/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ statusId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Status updated", variant: "success" });
-      reload();
-    } catch (e: any) {
-      toast({ title: "Update failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateInfluencer(toFormData({ id, statusId }));
+        toast({ title: "Status updated", variant: "success" });
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Update failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const submitEdit = async (values: InfluencerFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/influencers/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Influencer updated", variant: "success" });
-      setEditOpen(false);
-      reload();
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateInfluencer(toFormData({ ...values, id }));
+        toast({ title: "Influencer updated", variant: "success" });
+        setEditOpen(false);
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const doDelete = async () => {
-    try {
-      const res = await fetch(`/api/influencers/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Influencer deleted", variant: "success" });
-      router.push("/influencers");
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleteOpen(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteInfluencer(toFormData({ id }));
+        toast({ title: "Influencer deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteOpen(false);
+      }
+    });
   };
 
   if (error) {

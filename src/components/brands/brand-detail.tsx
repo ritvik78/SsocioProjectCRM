@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Building2, Globe, Mail, Phone, AtSign, Link2, Pencil, CalendarClock, Send, CalendarCheck, User as UserIcon } from "lucide-react";
 
 import { Button, Select, Card, CardHeader, CardTitle, CardContent, Spinner, EmptyState } from "@/components/ui/primitives";
@@ -12,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { BrandStatus, TeamMember, BrandFormValues } from "@/components/brands/brand-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { formatDate, formatDateTime, timeAgo } from "@/lib/utils";
+import { formatDate, formatDateTime, timeAgo, toFormData, isNextRedirectError } from "@/lib/utils";
+import { updateBrand, deleteBrand } from "@/lib/actions";
 
 const BrandForm = dynamic(
   () => import("@/components/brands/brand-form").then((m) => m.BrandForm),
@@ -80,7 +80,6 @@ type Tab = "timeline" | "followups" | "emails" | "campaigns" | "notes";
 
 export function BrandDetail({ id, user }: { id: string; user: SessionUser }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [brand, setBrand] = React.useState<BrandDetail | null>(null);
   const [statuses, setStatuses] = React.useState<BrandStatus[]>([]);
   const [members, setMembers] = React.useState<TeamMember[]>([]);
@@ -133,74 +132,65 @@ export function BrandDetail({ id, user }: { id: string; user: SessionUser }) {
   const changeStatus = async (statusId: string) => {
     if (!brand || statusId === brand.statusId) return;
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/brands/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ statusId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Status updated", variant: "success" });
-      reload();
-    } catch (e: any) {
-      toast({ title: "Update failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateBrand(toFormData({ id, statusId }));
+        toast({ title: "Status updated", variant: "success" });
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Update failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const changePriority = async (priority: string) => {
     if (!brand || priority === brand.priority) return;
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/brands/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priority }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Priority updated", variant: "success" });
-      reload();
-    } catch (e: any) {
-      toast({ title: "Update failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateBrand(toFormData({ id, priority }));
+        toast({ title: "Priority updated", variant: "success" });
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Update failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const submitEdit = async (values: BrandFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/brands/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Brand updated", variant: "success" });
-      setEditOpen(false);
-      reload();
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateBrand(toFormData({ ...values, id }));
+        toast({ title: "Brand updated", variant: "success" });
+        setEditOpen(false);
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const doDelete = async () => {
-    try {
-      const res = await fetch(`/api/brands/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Brand deleted", variant: "success" });
-      router.push("/brands");
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleteOpen(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteBrand(toFormData({ id }));
+        toast({ title: "Brand deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteOpen(false);
+      }
+    });
   };
 
   if (error) {

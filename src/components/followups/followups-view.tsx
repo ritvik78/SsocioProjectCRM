@@ -10,7 +10,8 @@ import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { formatDate, timeAgo } from "@/lib/utils";
+import { formatDate, timeAgo, toFormData } from "@/lib/utils";
+import { completeFollowup, rescheduleFollowup, recordFollowupOutcome } from "@/lib/actions";
 import type { SessionUser } from "@/lib/auth";
 
 const FollowupForm = dynamic(
@@ -95,61 +96,64 @@ export function FollowupsView({ user }: { user: SessionUser }) {
     };
   }, []);
 
-  const patchAction = async (id: string, body: Record<string, unknown>) => {
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/followups/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      return data.followup;
-    } catch (e: any) {
-      toast({ title: "Action failed", description: e.message, variant: "error" });
-      throw e;
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const complete = async () => {
     if (!completeTarget) return;
-    try {
-      await patchAction(completeTarget.id, { action: "complete" });
-      toast({ title: "Follow-up completed", variant: "success" });
-      setCompleteTarget(null);
-      load();
-    } catch {
-      setCompleteTarget(null);
-    }
+    setBusy(true);
+    React.startTransition(async () => {
+      try {
+        await completeFollowup(toFormData({ id: completeTarget.id }));
+        toast({ title: "Follow-up completed", variant: "success" });
+        setCompleteTarget(null);
+        load();
+      } catch (e: any) {
+        toast({ title: "Action failed", description: e.message, variant: "error" });
+        setCompleteTarget(null);
+      } finally {
+        setBusy(false);
+      }
+    });
   };
 
   const doReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reschedule || !rescheduleDate) return;
-    try {
-      await patchAction(reschedule.id, { action: "reschedule", dueDate: rescheduleDate });
-      toast({ title: "Follow-up rescheduled", variant: "success" });
-      setReschedule(null);
-      load();
-    } catch {
-      /* handled */
-    }
+    setBusy(true);
+    React.startTransition(async () => {
+      try {
+        await rescheduleFollowup(toFormData({ id: reschedule.id, dueDate: rescheduleDate }));
+        toast({ title: "Follow-up rescheduled", variant: "success" });
+        setReschedule(null);
+        load();
+      } catch (err: any) {
+        toast({ title: "Action failed", description: err.message, variant: "error" });
+      } finally {
+        setBusy(false);
+      }
+    });
   };
 
   const doOutcome = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!outcome) return;
-    try {
-      await patchAction(outcome.id, { action: "outcome", outcome: outcomeValue, notes: outcomeNotes || undefined });
-      toast({ title: "Outcome recorded", variant: "success" });
-      setOutcome(null);
-      load();
-    } catch {
-      setOutcome(null);
-    }
+    setBusy(true);
+    React.startTransition(async () => {
+      try {
+        await recordFollowupOutcome(
+          toFormData({
+            id: outcome.id,
+            outcome: outcomeValue,
+            notes: outcomeNotes || undefined,
+          })
+        );
+        toast({ title: "Outcome recorded", variant: "success" });
+        setOutcome(null);
+        load();
+      } catch (err: any) {
+        toast({ title: "Action failed", description: err.message, variant: "error" });
+      } finally {
+        setBusy(false);
+      }
+    });
   };
 
   const bucketTabs = [

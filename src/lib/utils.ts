@@ -102,3 +102,30 @@ export function daysFromNow(days: number) {
   d.setDate(d.getDate() + days);
   return d;
 }
+
+/** Convert a plain object into FormData for server actions. Skips null/undefined. */
+export function toFormData(obj: Record<string, unknown>) {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined || value === null) continue;
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      fd.append(key, String(value));
+    } else if (value instanceof Date) {
+      fd.append(key, value.toISOString());
+    }
+  }
+  return fd;
+}
+
+/**
+ * Next.js `redirect()` throws a framework-handled control-flow exception from
+ * server actions. When the action is invoked programmatically (`await action(fd)`)
+ * inside a try/catch, that NEXT_REDIRECT rejection reaches the caller and would be
+ * logged or toasted as a failure — but it actually means navigation is in flight.
+ */
+export function isNextRedirectError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const digest = (error as { digest?: unknown } | null)?.digest;
+  const digestStr = typeof digest === "string" ? digest : "";
+  return /^NEXT_(REDIRECT|NAVIGATE)/.test(message) || /^NEXT_(REDIRECT|NAVIGATE)/.test(digestStr);
+}

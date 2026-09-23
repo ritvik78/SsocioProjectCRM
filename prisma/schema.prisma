@@ -39,6 +39,8 @@ model User {
   campaignsCreated Campaign[]         @relation("CampaignCreator")
   instagramOutreach InstagramOutreach[] @relation("InstagramAssignee")
   responsesRecorded Response[]        @relation("ResponseRecorder")
+  tasksCreated      Task[]             @relation("TaskCreator")
+  tasksCompleted    Task[]             @relation("TaskCompleter")
 
   @@index([role])
   @@index([status])
@@ -410,6 +412,32 @@ model Followup {
   @@index([dueDate])
   @@index([status])
   @@index([assignedToId])
+}
+
+// ------------------------------------------------------------------
+// Personal to-do tasks
+// ------------------------------------------------------------------
+
+model Task {
+  id           String    @id @default(cuid())
+  title        String
+  dueDate      DateTime // scheduled day (rolled forward to today when the day passes without completion)
+  status       String    @default("PENDING") // PENDING | COMPLETED
+  priority     String    @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  notes        String?
+  createdById  String?
+  createdBy    User?     @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  completedAt  DateTime?
+  completedById String?
+  completedBy  User?     @relation("TaskCompleter", fields: [completedById], references: [id], onDelete: SetNull)
+  shiftedCount Int       @default(0) // how many times an uncompleted task rolled to the next day
+  originalDueDate DateTime? // first scheduled day, kept after rollovers
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([dueDate])
+  @@index([status])
 }
 
 // ------------------------------------------------------------------

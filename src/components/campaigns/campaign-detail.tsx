@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Megaphone, Users, Mail, Pencil, Send, Plus, Trash2, CalendarDays, Wallet, Tag, AtSign, Loader2 } from "lucide-react";
 
 import { Button, Select, Card, CardContent, Spinner, EmptyState } from "@/components/ui/primitives";
@@ -12,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { CampaignFormValues } from "@/components/campaigns/campaign-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateTime, toFormData, isNextRedirectError } from "@/lib/utils";
+import { updateCampaign, deleteCampaign } from "@/lib/actions";
 import { CAMPAIGN_STATUS_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 
@@ -62,7 +62,6 @@ const CAMPAIGN_LINK_COLORS: Record<string, string> = {
 
 export function CampaignDetail({ id, user }: { id: string; user: SessionUser }) {
   const { toast } = useToast();
-  const router = useRouter();
   const [campaign, setCampaign] = React.useState<CampaignDetail | null>(null);
   const [brands, setBrands] = React.useState<{ id: string; name: string }[]>([]);
   const [influencers, setInfluencers] = React.useState<{ id: string; name: string; instagramUsername: string | null }[]>([]);
@@ -122,22 +121,19 @@ export function CampaignDetail({ id, user }: { id: string; user: SessionUser }) 
 
   const submitEdit = async (values: CampaignFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(`/api/campaigns/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Campaign updated", variant: "success" });
-      setEditOpen(false);
-      reload();
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await updateCampaign(toFormData({ ...values, id }));
+        toast({ title: "Campaign updated", variant: "success" });
+        setEditOpen(false);
+        reload();
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   const addInfluencer = async () => {
@@ -200,16 +196,16 @@ export function CampaignDetail({ id, user }: { id: string; user: SessionUser }) 
   };
 
   const doDelete = async () => {
-    try {
-      const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed");
-      toast({ title: "Campaign deleted", variant: "success" });
-      router.push("/campaigns");
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleteOpen(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteCampaign(toFormData({ id }));
+        toast({ title: "Campaign deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteOpen(false);
+      }
+    });
   };
 
   if (error) {

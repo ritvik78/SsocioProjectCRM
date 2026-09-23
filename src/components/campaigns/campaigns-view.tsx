@@ -11,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { CampaignFormValues } from "@/components/campaigns/campaign-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, toFormData, isNextRedirectError } from "@/lib/utils";
+import { createCampaign, updateCampaign, deleteCampaign } from "@/lib/actions";
 import { CAMPAIGN_STATUS_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 
@@ -95,41 +96,37 @@ export function CampaignsView({ user }: { user: SessionUser }) {
 
   const submit = async (values: CampaignFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(editing ? `/api/campaigns/${editing.id}` : "/api/campaigns", {
-        method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save");
-      toast({ title: editing ? "Campaign updated" : "Campaign created", variant: "success" });
-      setModalOpen(false);
-      setPage(1);
-      load({ page: 1 });
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      const formData = toFormData({ ...values, ...(editing ? { id: editing.id } : {}) });
+      try {
+        if (editing) {
+          await updateCampaign(formData);
+          toast({ title: "Campaign updated", variant: "success" });
+        } else {
+          await createCampaign(formData);
+          toast({ title: "Campaign created", variant: "success" });
+        }
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+        setSubmitting(false);
+      }
+    });
   };
 
   const doDelete = async () => {
     if (!deleting) return;
     setDeleteLoading(true);
-    try {
-      const res = await fetch(`/api/campaigns/${deleting.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete");
-      toast({ title: "Campaign deleted", variant: "success" });
-      setDeleting(null);
-      load({ page });
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleting(null);
-    } finally {
-      setDeleteLoading(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteCampaign(toFormData({ id: deleting.id }));
+        toast({ title: "Campaign deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteLoading(false);
+      }
+    });
   };
 
   const hasFilters = search.trim() !== "" || statusFilter;

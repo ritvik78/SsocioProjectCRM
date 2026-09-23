@@ -12,7 +12,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { BrandStatus, TeamMember, BrandFormValues } from "@/components/brands/brand-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDate, toFormData, isNextRedirectError } from "@/lib/utils";
+import { createBrand, updateBrand, deleteBrand } from "@/lib/actions";
 import type { SessionUser } from "@/lib/auth";
 
 const BrandForm = dynamic(
@@ -149,41 +150,37 @@ export function BrandsView({ user }: { user: SessionUser }) {
 
   const submit = async (values: BrandFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(editing ? `/api/brands/${editing.id}` : "/api/brands", {
-        method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.details?.name?.[0] || "Failed to save");
-      toast({ title: editing ? "Brand updated" : "Brand created", variant: "success" });
-      setModalOpen(false);
-      setPage(1);
-      load({ page: 1, q: search, status: statusFilter, priority: priorityFilter, owner: ownerFilter, sort });
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      const formData = toFormData({ ...values, ...(editing ? { id: editing.id } : {}) });
+      try {
+        if (editing) {
+          await updateBrand(formData);
+          toast({ title: "Brand updated", variant: "success" });
+        } else {
+          await createBrand(formData);
+          toast({ title: "Brand created", variant: "success" });
+        }
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+        setSubmitting(false);
+      }
+    });
   };
 
   const doDelete = async () => {
     if (!deleting) return;
     setDeleteLoading(true);
-    try {
-      const res = await fetch(`/api/brands/${deleting.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete");
-      toast({ title: "Brand deleted", variant: "success" });
-      setDeleting(null);
-      load();
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleting(null);
-    } finally {
-      setDeleteLoading(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteBrand(toFormData({ id: deleting.id }));
+        toast({ title: "Brand deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteLoading(false);
+      }
+    });
   };
 
   const hasFilters = search.trim() !== "" || statusFilter || priorityFilter || ownerFilter;

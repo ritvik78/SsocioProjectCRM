@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Save, RefreshCw, KeyRound, ShieldCheck } from "lucide-react";
+import { Save, RefreshCw, KeyRound } from "lucide-react";
 
 import { Button, Input, Select, Card, CardContent, Spinner, Field } from "@/components/ui/primitives";
 import { Tabs, Table, THead, TBody, TH, TD, EmptyRow, Avatar, StatusBadge, Pagination } from "@/components/ui/data";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
+import { cn, toFormData } from "@/lib/utils";
+import { updateProfile } from "@/lib/actions";
 import { ROLE_LABELS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 
@@ -57,6 +58,11 @@ export function SettingsView({ user }: { user: SessionUser }) {
   const [auditPage, setAuditPage] = React.useState(1);
   const [auditTotal, setAuditTotal] = React.useState(0);
   const [auditTotalPages, setAuditTotalPages] = React.useState(1);
+
+  const [profileName, setProfileName] = React.useState(user.name);
+  const [profilePhone, setProfilePhone] = React.useState("");
+  const [profileDesignation, setProfileDesignation] = React.useState("");
+  const [savingProfile, setSavingProfile] = React.useState(false);
 
   const loadSettings = React.useCallback(async () => {
     try {
@@ -319,9 +325,42 @@ export function SettingsView({ user }: { user: SessionUser }) {
                   ))}
                 </div>
               </div>
-              <p className="flex items-center gap-1.5 rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500 dark:bg-zinc-900">
-                <ShieldCheck className="h-3.5 w-3.5" /> Contact a Super Admin to update your profile details or password.
-              </p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setSavingProfile(true);
+                  React.startTransition(async () => {
+                    try {
+                      await updateProfile(toFormData({ name: profileName, phone: profilePhone, designation: profileDesignation }));
+                      toast({ title: "Profile updated", variant: "success" });
+                    } catch (err: any) {
+                      toast({ title: "Save failed", description: err.message, variant: "error" });
+                    } finally {
+                      setSavingProfile(false);
+                    }
+                  });
+                }}
+                className="space-y-4 rounded-lg border border-zinc-100 p-4 dark:border-zinc-800"
+              >
+                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">Edit profile</h3>
+                <Field label="Name" required>
+                  <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} required />
+                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Phone">
+                    <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} placeholder="+91 …" />
+                  </Field>
+                  <Field label="Designation">
+                    <Input value={profileDesignation} onChange={(e) => setProfileDesignation(e.target.value)} placeholder="e.g. Account Manager" />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={savingProfile}>
+                    {savingProfile ? "Saving…" : <><Save className="h-4 w-4" /> Save profile</>}
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </CardContent>

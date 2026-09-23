@@ -11,7 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import dynamic from "next/dynamic";
 import type { InfluencerStatus, InfluencerFormValues } from "@/components/influencers/influencer-form";
 import { FormSkeleton } from "@/components/ui/skeletons";
-import { cn, formatNumber, formatDate } from "@/lib/utils";
+import { cn, formatNumber, formatDate, toFormData, isNextRedirectError } from "@/lib/utils";
+import { createInfluencer, updateInfluencer, deleteInfluencer } from "@/lib/actions";
 import type { SessionUser } from "@/lib/auth";
 
 const InfluencerForm = dynamic(
@@ -123,41 +124,37 @@ export function InfluencersView({ user }: { user: SessionUser }) {
 
   const submit = async (values: InfluencerFormValues) => {
     setSubmitting(true);
-    try {
-      const res = await fetch(editing ? `/api/influencers/${editing.id}` : "/api/influencers", {
-        method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.details?.name?.[0] || "Failed to save");
-      toast({ title: editing ? "Influencer updated" : "Influencer added", variant: "success" });
-      setModalOpen(false);
-      setPage(1);
-      load({ page: 1 });
-    } catch (e: any) {
-      toast({ title: "Save failed", description: e.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+    React.startTransition(async () => {
+      const formData = toFormData({ ...values, ...(editing ? { id: editing.id } : {}) });
+      try {
+        if (editing) {
+          await updateInfluencer(formData);
+          toast({ title: "Influencer updated", variant: "success" });
+        } else {
+          await createInfluencer(formData);
+          toast({ title: "Influencer added", variant: "success" });
+        }
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Save failed", description: e.message, variant: "error" });
+        setSubmitting(false);
+      }
+    });
   };
 
   const doDelete = async () => {
     if (!deleting) return;
     setDeleteLoading(true);
-    try {
-      const res = await fetch(`/api/influencers/${deleting.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete");
-      toast({ title: "Influencer deleted", variant: "success" });
-      setDeleting(null);
-      load({ page });
-    } catch (e: any) {
-      toast({ title: "Delete failed", description: e.message, variant: "error" });
-      setDeleting(null);
-    } finally {
-      setDeleteLoading(false);
-    }
+    React.startTransition(async () => {
+      try {
+        await deleteInfluencer(toFormData({ id: deleting.id }));
+        toast({ title: "Influencer deleted", variant: "success" });
+      } catch (e: any) {
+        if (isNextRedirectError(e)) return;
+        toast({ title: "Delete failed", description: e.message, variant: "error" });
+        setDeleteLoading(false);
+      }
+    });
   };
 
   const hasFilters = search.trim() !== "" || statusFilter || categoryFilter || ownerFilter;

@@ -5,6 +5,8 @@ import { Button, Input, Select, Textarea, Field } from "@/components/ui/primitiv
 import { Modal } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { CONTACT_TYPES } from "@/lib/constants";
+import { toFormData } from "@/lib/utils";
+import { createFollowup } from "@/lib/actions";
 
 export function FollowupForm({
   open,
@@ -53,30 +55,27 @@ export function FollowupForm({
       return;
     }
     setSubmitting(true);
-    try {
-      const res = await fetch("/api/followups", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandId: brand || undefined,
-          influencerId: influencer || undefined,
-          contactType,
-          dueDate,
-          priority,
-          notes: notes || undefined,
-          assignedToId: assignedToId || undefined,
-        }),
+    React.startTransition(async () => {
+      const formData = toFormData({
+        brandId: brand || undefined,
+        influencerId: influencer || undefined,
+        contactType,
+        dueDate,
+        priority,
+        notes: notes || undefined,
+        assignedToId: assignedToId || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create follow-up");
-      toast({ title: "Follow-up scheduled", description: `For ${entityName}`, variant: "success" });
-      onClose();
-      onCreated?.();
-    } catch (err: any) {
-      toast({ title: "Could not schedule", description: err.message, variant: "error" });
-    } finally {
-      setSubmitting(false);
-    }
+      try {
+        await createFollowup(formData);
+        toast({ title: "Follow-up scheduled", description: `For ${entityName}`, variant: "success" });
+        onClose();
+        onCreated?.();
+      } catch (err: any) {
+        toast({ title: "Could not schedule", description: err.message, variant: "error" });
+      } finally {
+        setSubmitting(false);
+      }
+    });
   };
 
   return (

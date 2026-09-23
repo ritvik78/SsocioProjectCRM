@@ -38,14 +38,13 @@ export const getCurrentUser = cache(
   async (): Promise<MaybeAuthContext> => {
     try {
       const supabase = await createClient();
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getClaims();
+      const authId = data?.claims.sub;
 
-      if (!authUser) return null;
+      if (!authId) return null;
 
       const profile = await prisma.user.findUnique({
-        where: { authId: authUser.id },
+        where: { authId },
         include: {
           userPermissions: { include: { permission: true } },
         },
