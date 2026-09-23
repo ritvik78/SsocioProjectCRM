@@ -11,6 +11,6 @@ const TeamView = dynamic(
 );
 
 export async function TeamServer() {
-  const ctx = await requirePermission("team.view");
+  const ctx = await requirePermission("team.manage");
   return <TeamView user={ctx.user} />;
 }

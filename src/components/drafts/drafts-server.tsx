@@ -11,6 +11,6 @@ const DraftsView = dynamic(
 );
 
 export async function DraftsServer() {
-  const ctx = await requirePermission("outreach.manage");
+  const ctx = await requirePermission("drafts.manage");
   return <DraftsView user={ctx.user} />;
 }

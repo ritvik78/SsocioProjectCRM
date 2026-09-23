@@ -11,6 +11,6 @@ const ImportView = dynamic(
 );
 
 export async function ImportServer() {
-  await requirePermission("import.manage");
+  await requirePermission("brands.add");
   return <ImportView />;
 }

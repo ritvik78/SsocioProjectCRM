@@ -20,7 +20,6 @@ import {
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TodoPanel } from "@/components/tasks/todo-panel";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -74,7 +73,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <TodoPanel />
       <div className="border-t border-zinc-200 p-4 bg-amber-50/50">
         <p className="text-[11px] font-semibold leading-relaxed text-zinc-800">
           Brand onboarding • Influencer outreach • Campaigns

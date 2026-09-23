@@ -11,6 +11,6 @@ const CampaignsView = dynamic(
 );
 
 export async function CampaignsServer() {
-  const ctx = await requirePermission("campaigns.view");
+  const ctx = await requirePermission("campaigns.manage");
   return <CampaignsView user={ctx.user} />;
 }

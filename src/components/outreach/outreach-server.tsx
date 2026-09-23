@@ -11,6 +11,6 @@ const OutreachView = dynamic(
 );
 
 export async function OutreachServer() {
-  const ctx = await requirePermission("outreach.view");
+  const ctx = await requirePermission("outreach.manage");
   return <OutreachView user={ctx.user} />;
 }

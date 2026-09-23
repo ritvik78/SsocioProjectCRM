@@ -57,40 +57,45 @@ export function TasksView() {
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async (opts?: { bucket?: Bucket; search?: string; priority?: string }) => {
-    setLoading(true);
-    setError("");
-    try {
-      const curBucket = opts?.bucket ?? bucket;
-      const curSearch = opts?.search ?? search;
-      const curPriority = opts?.priority ?? priorityFilter;
-      const params = new URLSearchParams({ bucket: curBucket });
-      if (curSearch) params.set("q", curSearch);
-      if (curPriority) params.set("priority", curPriority);
-      const res = await fetch(`/api/tasks?${params.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load tasks");
-      setRows(data.tasks ?? []);
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
-  }, [bucket, search, priorityFilter]);
+  const requestRef = React.useRef(0);
+
+  const run = React.useCallback(
+    async (opts: { bucket: Bucket; search: string; priority: string }) => {
+      const id = ++requestRef.current;
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams({ bucket: opts.bucket });
+        if (opts.search.trim()) params.set("q", opts.search.trim());
+        if (opts.priority) params.set("priority", opts.priority);
+        const res = await fetch(`/api/tasks?${params.toString()}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load tasks");
+        if (id === requestRef.current) setRows(data.tasks ?? []);
+      } catch (e: any) {
+        if (id === requestRef.current) setError(e.message ?? "Failed to load tasks");
+      } finally {
+        if (id === requestRef.current) setLoading(false);
+      }
+    },
+    []
+  );
+
+  const runNow = () => void run({ bucket, search, priority: priorityFilter });
 
   React.useEffect(() => {
-    const t = setTimeout(() => load(), 0);
+    const t = setTimeout(() => {
+      void run({ bucket, search, priority: priorityFilter });
+    }, 250);
     return () => clearTimeout(t);
-  }, [load]);
+  }, [search, bucket, priorityFilter, run]);
 
-  const apply = (next: Partial<{ bucket: Bucket; search: string; priority: string }>) => {
-    const nb = next.bucket ?? bucket;
-    const ns = next.search ?? search;
-    const np = next.priority ?? priorityFilter;
-    if (next.bucket !== undefined) setBucket(next.bucket);
-    if (next.search !== undefined) setSearch(next.search);
-    if (next.priority !== undefined) setPriorityFilter(next.priority);
-    load({ bucket: nb, search: ns, priority: np });
+  const applyBucket = (nb: Bucket) => {
+    setBucket(nb);
+  };
+
+  const applyPriority = (np: string) => {
+    setPriorityFilter(np);
   };
 
   const resetFilters = () => {
@@ -98,7 +103,7 @@ export function TasksView() {
     setBucket(nb);
     setSearch("");
     setPriorityFilter("");
-    load({ bucket: nb, search: "", priority: "" });
+    void run({ bucket: nb, search: "", priority: "" });
   };
 
   const openCreate = () => {
@@ -121,7 +126,7 @@ export function TasksView() {
         toast({ title: "Task added", variant: "success" });
       }
       setModalOpen(false);
-      void load();
+      runNow();
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "error" });
     } finally {
@@ -130,11 +135,11 @@ export function TasksView() {
   };
 
   const doComplete = async (t: TaskRow) => {
-    if (busyId || t.status === "COMPLETED") return;
+    if (t.status === "COMPLETED") return;
     setBusyId(t.id);
     try {
       await completeTask(toFormData({ id: t.id }));
-      void load();
+      runNow();
     } catch (e: any) {
       toast({ title: "Could not update task", description: e.message, variant: "error" });
     } finally {
@@ -153,7 +158,7 @@ export function TasksView() {
     } finally {
       setDeleteLoading(false);
       setDeleting(null);
-      void load();
+      runNow();
     }
   };
 
@@ -179,7 +184,7 @@ export function TasksView() {
       <Tabs
         tabs={BUCKETS}
         value={bucket}
-        onChange={(v) => apply({ bucket: v })}
+        onChange={applyBucket}
       />
 
       <Card className="p-4">
@@ -189,12 +194,12 @@ export function TasksView() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && apply({ search: e.currentTarget.value })}
+              onKeyDown={(e) => e.key === "Enter" && runNow()}
               placeholder="Search tasks…"
               className="pl-9"
             />
           </div>
-          <Select value={priorityFilter} onChange={(e) => apply({ priority: e.target.value })} className="w-36">
+          <Select value={priorityFilter} onChange={(e) => applyPriority(e.target.value)} className="w-36">
             <option value="">All priorities</option>
             {["LOW", "MEDIUM", "HIGH", "URGENT"].map((p) => (
               <option key={p} value={p}>{p}</option>
@@ -205,7 +210,7 @@ export function TasksView() {
               Clear
             </Button>
           )}
-          <Button variant="outline" onClick={() => load()}>
+          <Button variant="outline" onClick={runNow}>
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
@@ -251,7 +256,7 @@ export function TasksView() {
                       <TD>
                         <button
                           onClick={() => doComplete(t)}
-                          disabled={busyId !== null || t.status === "COMPLETED"}
+                          disabled={busyId === t.id || t.status === "COMPLETED"}
                           aria-label={t.status === "COMPLETED" ? "Completed" : "Complete task"}
                           className={cn(
                             "flex h-5 w-5 items-center justify-center rounded-full border transition-colors",

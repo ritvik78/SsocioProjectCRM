@@ -11,6 +11,6 @@ const FollowupsView = dynamic(
 );
 
 export async function FollowupsServer() {
-  const ctx = await requirePermission("followups.view");
+  const ctx = await requirePermission("followups.manage");
   return <FollowupsView user={ctx.user} />;
 }

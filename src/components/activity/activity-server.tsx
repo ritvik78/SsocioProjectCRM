@@ -1,6 +1,6 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { requirePermission } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { TableSkeleton } from "@/components/ui/skeletons";
 
 const ActivityView = dynamic(
@@ -11,6 +11,6 @@ const ActivityView = dynamic(
 );
 
 export async function ActivityServer() {
-  await requirePermission("activity.view");
+  await requireUser();
   return <ActivityView />;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { requirePermission } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { FormSkeleton } from "@/components/ui/skeletons";
 
 const SettingsView = dynamic(
@@ -11,6 +11,6 @@ const SettingsView = dynamic(
 );
 
 export async function SettingsServer() {
-  const ctx = await requirePermission("settings.manage");
+  const ctx = await requireUser();
   return <SettingsView user={ctx.user} />;
 }
