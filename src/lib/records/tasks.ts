@@ -65,11 +65,28 @@ export async function listTasksForUser(userId: string, range: TaskRange = {}) {
   });
 }
 
-export async function createTask(input: TaskInput, actor: { id: string }) {
-  if (!input.dueDate || isNaN(new Date(input.dueDate).getTime())) {
-    throw new ApiError(422, "A valid task date is required");
+/**
+ * Normalize a task date to noon UTC of the given calendar day so the picked
+ * date never shifts across time zones. Accepts either a Date (taskSchema
+ * transform) or a "YYYY-MM-DD" string.
+ */
+function toNoonUtcDate(value: unknown): Date {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate(), 12));
   }
-  const dueDate = new Date(`${input.dueDate}T12:00:00.000Z`);
+  if (typeof value === "string") {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (m) return new Date(`${value.trim()}T12:00:00.000Z`);
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12));
+    }
+  }
+  throw new ApiError(422, "A valid task date is required");
+}
+
+export async function createTask(input: TaskInput, actor: { id: string }) {
+  const dueDate = toNoonUtcDate(input.dueDate);
 
   const task = await prisma.task.create({
     data: {
@@ -118,10 +135,7 @@ export async function updateTask(id: string, input: Partial<TaskInput>, actor: {
   if (!existing || existing.createdById !== actor.id) throw new ApiError(404, "Task not found");
 
   let dueDate: Date | undefined;
-  if (input.dueDate) {
-    if (isNaN(new Date(input.dueDate).getTime())) throw new ApiError(422, "A valid task date is required");
-    dueDate = new Date(`${input.dueDate}T12:00:00.000Z`);
-  }
+  if (input.dueDate) dueDate = toNoonUtcDate(input.dueDate);
 
   const updated = await prisma.task.update({
     where: { id },
