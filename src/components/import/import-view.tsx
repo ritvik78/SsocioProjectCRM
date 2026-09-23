@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import { Upload, Download, FileUp, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 
 import { Button, Card, CardContent, Textarea } from "@/components/ui/primitives";
@@ -55,28 +56,46 @@ export function ImportView() {
   const [tab, setTab] = React.useState<Tab>("brand");
   const [csv, setCsv] = React.useState("");
   const [preview, setPreview] = React.useState<PreviewRow[]>([]);
+  const [fileHeaders, setFileHeaders] = React.useState<string[]>([]);
   const [importing, setImporting] = React.useState(false);
   const [result, setResult] = React.useState<{ created: number; errors: string[] } | null>(null);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = React.useState(false);
 
   const headers = tab === "brand" ? BRAND_HEADERS : INFLUENCER_HEADERS;
+  const previewHeaders = fileHeaders.length > 0 ? fileHeaders : headers;
 
   const updatePreview = (raw: string) => {
     setCsv(raw);
     setResult(null);
     if (!raw.trim()) {
       setPreview([]);
+      setFileHeaders([]);
       return;
     }
     const parsed = Papa.parse<PreviewRow>(raw, { header: true, skipEmptyLines: true });
+    const detected = (parsed.meta.fields ?? []).map((f) => f?.trim() ?? "").filter(Boolean);
+    setFileHeaders(detected);
     setPreview(parsed.data.slice(0, 5));
   };
 
-  const onFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => updatePreview(String(reader.result ?? ""));
-    reader.readAsText(file);
+  const onFile = async (file: File) => {
+    const name = file.name.toLowerCase();
+    const isCsv = name.endsWith(".csv") || file.type === "text/csv";
+    if (isCsv) {
+      updatePreview(await file.text());
+      return;
+    }
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws) throw new Error("The Excel file has no readable sheet");
+      updatePreview(XLSX.utils.sheet_to_csv(ws));
+      toast({ title: `${file.name} read`, description: "Column names detected from the first row.", variant: "success" });
+    } catch (e: any) {
+      toast({ title: "Could not read Excel file", description: e.message ?? "Unsupported file", variant: "error" });
+    }
   };
 
   const setTemplate = () => {
@@ -139,6 +158,7 @@ export function ImportView() {
             setTab(t);
             setCsv("");
             setPreview([]);
+            setFileHeaders([]);
             setResult(null);
           }}
         />
@@ -163,7 +183,7 @@ export function ImportView() {
                 )}
               >
                 <FileUp className="h-8 w-8 text-zinc-300" />
-                <p className="text-sm text-zinc-500">Drag & drop your CSV here, or</p>
+                <p className="text-sm text-zinc-500">Drag & drop your Excel (.xlsx) or CSV file here, or</p>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                     <Upload className="h-3.5 w-3.5" /> Choose file
@@ -175,7 +195,7 @@ export function ImportView() {
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".csv,text/csv"
+                  accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -187,12 +207,17 @@ export function ImportView() {
 
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200">CSV content</p>
-                  {missingHeaders.length > 0 && (
-                    <p className="flex items-center gap-1 text-xs font-medium text-amber-600">
-                      <AlertTriangle className="h-3.5 w-3.5" /> Missing: {missingHeaders.join(", ")}
-                    </p>
-                  )}
+<p className="text-sm font-medium text-zinc-700 dark:text-zinc-200">File content</p>
+                {missingHeaders.length > 0 && (
+                  <p className="flex items-center gap-1 text-xs font-medium text-amber-600">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Missing: {missingHeaders.join(", ")}
+                  </p>
+                )}
+                {fileHeaders.length > 0 && (
+                  <p className="text-xs text-zinc-500">
+                    Detected {preview.length > 0 ? "columns" : "columns"}: {fileHeaders.join(", ")}
+                  </p>
+                )}
                 </div>
                 <Textarea
                   rows={8}
@@ -215,7 +240,7 @@ export function ImportView() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-zinc-50 dark:bg-zinc-800/60">
                       <tr>
-                        {headers.map((h) => (
+                        {previewHeaders.map((h) => (
                           <th key={h} className="whitespace-nowrap px-2 py-1.5 font-medium text-zinc-500">{h}</th>
                         ))}
                       </tr>
@@ -223,7 +248,7 @@ export function ImportView() {
                     <tbody>
                       {preview.map((row, i) => (
                         <tr key={i} className="border-t border-zinc-100 dark:border-zinc-800">
-                          {headers.map((h) => (
+                          {previewHeaders.map((h) => (
                             <td key={h} className="max-w-[180px] truncate whitespace-nowrap px-2 py-1.5 text-zinc-700 dark:text-zinc-200">{row[h] ?? ""}</td>
                           ))}
                         </tr>

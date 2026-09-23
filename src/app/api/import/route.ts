@@ -6,6 +6,26 @@ import { createActivity, createAuditLog } from "@/lib/track";
 
 const normalize = (s: unknown) => (typeof s === "string" ? s.trim() : "");
 
+const keyNorm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * Case/space/underscore-insensitive cell lookup so Excel headers like
+ * "Name", "Instagram Username" or "Engagement Rate" map to name,
+ * instagram_username, engagement_rate.
+ */
+function cell(row: Record<string, unknown>, key: string): string {
+  const direct = row[key];
+  if (direct !== undefined && direct !== null && direct !== "") return String(direct).trim();
+  const target = keyNorm(key);
+  for (const k of Object.keys(row)) {
+    if (keyNorm(k) === target) {
+      const v = row[k];
+      if (v !== undefined && v !== null && v !== "") return String(v).trim();
+    }
+  }
+  return "";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ctx = await apiRequirePermission("brands.add");
@@ -27,13 +47,13 @@ export async function POST(req: NextRequest) {
     if (type === "influencer") {
       const statusMap = await ensureStatusesByName("influencer", ["NEW"]);
       for (const row of rawRows) {
-        const name = normalize(row.name);
+        const name = cell(row, "name");
         if (!name) {
           errors.push("Row skipped: missing name");
           continue;
         }
-        const email = normalize(row.email).toLowerCase();
-        const username = normalize(row.instagram_username).replace(/^@/, "");
+        const email = cell(row, "email").toLowerCase();
+        const username = cell(row, "instagram_username").replace(/^@/, "");
         const existing = email
           ? await prisma.influencer.findFirst({ where: { OR: email ? [{ email }] : [{ name }] } })
           : username
@@ -43,23 +63,23 @@ export async function POST(req: NextRequest) {
           errors.push(`Skipped duplicate: ${name}`);
           continue;
         }
-        const statusName = normalize(row.status) || "NEW";
+        const statusName = cell(row, "status") || "NEW";
         const status = statusMap[statusName.toLowerCase()] ?? statusMap.new;
         const influencer = await prisma.influencer.create({
           data: {
             name,
             instagramUsername: username || null,
             email: email || null,
-            phone: normalize(row.phone) || null,
-            category: normalize(row.category) || null,
-            followers: parseInt(normalize(row.followers)) || null,
-            engagementRate: parseFloat(normalize(row.engagement_rate)) || null,
-            platform: normalize(row.platform) || "INSTAGRAM",
-            city: normalize(row.city) || null,
-            state: normalize(row.state) || null,
-            source: normalize(row.source) || null,
+            phone: cell(row, "phone") || null,
+            category: cell(row, "category") || null,
+            followers: parseInt(cell(row, "followers").replace(/[^0-9]/g, "")) || null,
+            engagementRate: parseFloat(cell(row, "engagement_rate").replace(/[^0-9.]/g, "")) || null,
+            platform: cell(row, "platform") || "INSTAGRAM",
+            city: cell(row, "city") || null,
+            state: cell(row, "state") || null,
+            source: cell(row, "source") || null,
             statusId: status?.id ?? null,
-            notes: normalize(row.notes) || null,
+            notes: cell(row, "notes") || null,
             assignedToId: ctx.user.id,
           },
         });
@@ -74,12 +94,12 @@ export async function POST(req: NextRequest) {
     } else {
       const statusMap = await ensureStatusesByName("brand", ["NEW LEAD"]);
       for (const row of rawRows) {
-        const name = normalize(row.name);
+        const name = cell(row, "name");
         if (!name) {
           errors.push("Row skipped: missing name");
           continue;
         }
-        const email = normalize(row.email).toLowerCase();
+        const email = cell(row, "email").toLowerCase();
         const existing = email
           ? await prisma.brand.findFirst({ where: email ? { email } : { name } })
           : null;
@@ -87,24 +107,24 @@ export async function POST(req: NextRequest) {
           errors.push(`Skipped duplicate: ${name}`);
           continue;
         }
-        const statusName = normalize(row.status) || "NEW LEAD";
+        const statusName = cell(row, "status") || "NEW LEAD";
         const status = statusMap[statusName.toLowerCase()] ?? statusMap["new lead"];
         await prisma.brand.create({
           data: {
             name,
-            companyName: normalize(row.company_name) || null,
-            contactName: normalize(row.contact_name) || null,
-            designation: normalize(row.designation) || null,
+            companyName: cell(row, "company_name") || null,
+            contactName: cell(row, "contact_name") || null,
+            designation: cell(row, "designation") || null,
             email: email || null,
-            phone: normalize(row.phone) || null,
-            website: normalize(row.website) || null,
-            instagramHandle: normalize(row.instagram_handle) || null,
-            industry: normalize(row.industry) || null,
-            city: normalize(row.city) || null,
-            state: normalize(row.state) || null,
-            source: normalize(row.source) || null,
+            phone: cell(row, "phone") || null,
+            website: cell(row, "website") || null,
+            instagramHandle: cell(row, "instagram_handle") || null,
+            industry: cell(row, "industry") || null,
+            city: cell(row, "city") || null,
+            state: cell(row, "state") || null,
+            source: cell(row, "source") || null,
             statusId: status?.id ?? null,
-            notes: normalize(row.notes) || null,
+            notes: cell(row, "notes") || null,
             leadOwnerId: ctx.user.id,
           },
         });
