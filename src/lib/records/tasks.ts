@@ -40,18 +40,24 @@ export type TaskRange = {
   from?: Date;
   to?: Date;
   includeCompleted?: boolean;
+  status?: string;
+  q?: string;
+  priority?: string;
 };
 
 export async function listTasksForUser(userId: string, range: TaskRange = {}) {
   await rolloverTasks(userId);
 
   const where: any = { createdById: userId };
+  if (range.status) where.status = range.status;
+  else if (!range.includeCompleted) where.status = "PENDING";
+  if (range.q) where.title = { contains: range.q, mode: "insensitive" };
+  if (range.priority) where.priority = range.priority;
   if (range.from || range.to) {
     where.dueDate = {};
     if (range.from) where.dueDate.gte = range.from;
     if (range.to) where.dueDate.lte = range.to;
   }
-  if (!range.includeCompleted) where.status = "PENDING";
 
   return prisma.task.findMany({
     where,
@@ -104,6 +110,39 @@ export async function completeTask(id: string, actor: { id: string }) {
     recordId: id,
     previousValue: { status: existing.status },
     newValue: { status: "COMPLETED" },
+  });
+  return updated;
+}
+
+export async function updateTask(id: string, input: Partial<TaskInput>, actor: { id: string }) {
+  const existing = await prisma.task.findUnique({ where: { id } });
+  if (!existing || existing.createdById !== actor.id) throw new ApiError(404, "Task not found");
+
+  let dueDate: Date | undefined;
+  if (input.dueDate) {
+    dueDate = new Date(input.dueDate);
+    if (isNaN(dueDate.getTime())) throw new ApiError(422, "A valid task date is required");
+    dueDate.setHours(12, 0, 0, 0);
+  }
+
+  const updated = await prisma.task.update({
+    where: { id },
+    data: {
+      title: input.title ?? undefined,
+      dueDate,
+      priority: input.priority ?? undefined,
+      notes: input.notes ?? undefined,
+      originalDueDate: existing.originalDueDate ?? dueDate ?? undefined,
+    },
+  });
+
+  await createAuditLog({
+    userId: actor.id,
+    action: "UPDATE",
+    recordType: "Task",
+    recordId: id,
+    previousValue: { title: existing.title, dueDate: existing.dueDate.toISOString() },
+    newValue: { title: updated.title, dueDate: updated.dueDate.toISOString() },
   });
   return updated;
 }

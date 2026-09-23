@@ -223,6 +223,7 @@ function MobileNav() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/brands", label: "Brands" },
     { href: "/influencers", label: "Influencers" },
+    { href: "/tasks", label: "To-do" },
     { href: "/calendar", label: "Calendar" },
     { href: "/outreach", label: "Outreach" },
     { href: "/follow-ups", label: "Follow-ups" },

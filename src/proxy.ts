@@ -16,6 +16,7 @@ const protectedPrefixes = [
   "/analytics",
   "/settings",
   "/calendar",
+  "/tasks",
 ];
 
 export async function proxy(request: NextRequest) {

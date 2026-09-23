@@ -26,6 +26,7 @@ import {
 import {
   createTask as createTaskRecord,
   completeTask as completeTaskRecord,
+  updateTask as updateTaskRecord,
   deleteTask as deleteTaskRecord,
 } from "@/lib/records/tasks";
 
@@ -381,6 +382,29 @@ export async function completeTask(formData: FormData) {
   await completeTaskRecord(id, session.user);
 
   // 4) Revalidation
+  revalidatePath("/");
+}
+
+export async function updateTask(formData: FormData) {
+  // 1) Authentication
+  const session = await getCurrentUser();
+  if (!session) throw new Error("You must be logged in");
+
+  // 2) Getting the record id
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Task not found");
+
+  // 3) Validation
+  const parsed = taskSchema.partial().safeParse(formDataToObject(formData));
+  if (!parsed.success) {
+    const message = parsed.error.issues.map((i) => i.message).join(", ");
+    throw new Error(message || "Please fix the form errors");
+  }
+
+  // 4) Mutation
+  await updateTaskRecord(id, parsed.data, session.user);
+
+  // 5) Revalidation
   revalidatePath("/");
 }
 
